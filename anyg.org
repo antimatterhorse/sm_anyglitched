@@ -1,0 +1,352 @@
+=== ANY% GLITCHED, route by sniq and antimatterhorse ===
+
+* Overview
+There are two new main concepts for this Any% Glitched route, they work together in tandem: Shuffer Manipulation and Gold Blocks. With those, we are able to quickly glitch the game into giving Samus X-ray (among other items) in the Out of Bouns (OOB). Equipped with X-ray, we can promtly find a way to end the game like previous Any% Glitched routes.
+So let's get into those new concepts.
+
+* Main techniques
+** Shuffler Manipulation
+The Shuffler block that exists in Parlor OOB after a save -> reset -> reload is already known, it re-draws the room upon touching it, shuffling blocks around. We were able to better study the shuffle effect and we now know how the game uses information in memory to re-draw the room. Most importantly, some of that information comes from the RAM part of the memory, which is where the game keeps track of information such as where Samus is, her pose, her speed; or if enemies are alive, where they are, their speed; or what doors have been opened, camera position, etc. That is, the Shuffler partly uses information that we as players can change by playing the game and performing certain actions.
+This means that we can, in theory, generate whatever blocks we want after touching the Shuffler! 
+
+** Gold Blocks
+We know of glitched blocks that do useful things, like the "god block" 0F[44], where touching it with a correct horizontal (X) position can trigger a glitched but controlled response, executing code related to that value of X. That block can, among other things, gift items to Samus. Well, it turns out that there are other blocks that display a similar behavior. Similar in the sense that we can touch a block and get code executed from elsewhere, and get items. But different in the sense that it doesn't depend on X, but other variables. A glitched block depending on other variables can be a great asset, because altering the value of X can be very slow (if possible at all): for example, getting X-ray with the god block requires navigating Out of Bounds to a position of around X = 8800, which is more than 100 screens traveled either direction. Therefore, having other variables to play with could be much faster in comparison.
+The "Gold Block" 0F[5D] (or 07[5D]), is similar to [44], but it does not care about X, instead it cares about the variable contained in RAM address $0380. Variable $0380 is related to Samus's sprite and its position on screen. This is great news since we can alter a good amount of its value by changing Samus's pose! There is still the limitation of where on screen Samus touches that block, but it is still a great improvement.
+
+* The Route, basically
+It is not difficut to see the basic vision with the information above: perform Shuffer Manipulation to generate a Gold Block, touch the block in the correct way to be given X-ray (or all beams), and then end the game like other glitched routes. And basically, that is how the route works! The main beats are:
+
+- Save in Parlor then reload (to put the Shuffler in the OOB);
+- Perform a series of actions in Parlor to set certain values in RAM memory;
+- Do Doorskip first try (if the Climb room is entered, the Shuffler disappears from Parlor OOB);  
+- Touch the Shuffler then navigate to the Gold Block that was set up;
+- Touch the Gold block in the right way to get X-ray;
+- Find the closest transition to Landing Site (preferably OOB);
+- Use X-ray in the correct position to corrupt memory related to Events, which triggers the Escape;
+- Enter the Ship, gg.
+
+That is the best we can explain the overall route without going into excruciating details, of which there are many. If that's what you came for, *thank you for reading* and we hope this gives you a somewhat satisfying understanding of how the route works on a fundamental level.
+
+That being said, the devil is in the details. From here on forward, we will discuss how the initial vision was implemented, obstacles that kept blocking progress, and what workarounds we developed. And finally, how it all comes together to form a practical RTA run. 
+
+
+* Details
+
+** How the Shuffler works
+If you reload after a reset in Parlor and then reach OOB under the room (via Doorskip), you can find not one, but two Shufflers (the 2nd one is further left). If you keep moving left you will see more Shufflers, but they are actually copies of those first two, so ultimately only those two are unique. Both have been Disassembled, meaning we know what blocks will be generated after the shuffle, and also where. Each block comes from a pair of numbers, one for the BT value (type of block) and one for the BTS value (specification). For instance, a god block with BT = 0F and BTS = 44 comes from a pair of addresses ($address_bt $address_bts) where the values contained in those addresses were 44 for $address_bts and some value starting in F for $address_bt (BT always starts with 0, the game only needs the next digit).
+
+Every block generated by [Shuffler1 follows this list](https://github.com/antimatterhorse/sm_anyglitched/blob/495f69a087cf5f3cc1f3438802ac920db8e565de/Shuffler1.txt), and [Shuffler2 follows list](https://github.com/antimatterhorse/sm_anyglitched/blob/495f69a087cf5f3cc1f3438802ac920db8e565de/Shuffler2.txt). For the rest of this text, we will consider Shuffler1.
+
+Now that we know how every block is created, we can create any block we want anywhere we want, right? Well, not really.
+
+First, any address above $2000 (OpenBUS) is not under player control, it has to do with the game or the hardware, and the values there are either set in stone or change uncontrollably. You will notice that that's most of the list. All those blocks that use addresses from that region are always set the same or will be changed from one run to the next. There are some blocks from this region that can be useful (transitions to Landing Site or Terminator, or teleport blocks, and so on), but no Gold Blocks naturally appear here, which means no cool items for Samus. 
+
+Therefore, we have to create a Gold Block ourselves. We can do that by considering a pair of addresses that generate one block, both addresses in the $0000 to $1FFF range, and by changing the value in $address_bt to something that starts with F (or 7), while also changing the value in $address_bts to 5D, a Gold Block will be created by touching the Shuffler. Or, with some luck, maybe one of those two addresses already has the value that we want, and we only need to change the other one.
+
+
+** Generating Blocks
+
+If we wanted a Gold Block as the 1st block in the room (at position X = 0, Y = 0) after the shuffle, according the the list, the pair of addresses used for that block is ($0001 $145B), so we would need the value at adress $0001 to be F_ (or 7_) and the value at address $145B to be 5D. That would give us a 0F[5D] block (or 07). But what are those addresses? To determine that, all we have to do is check PJboy's incredible [RAM Map](https://patrickjohnston.org/ASM/Lists/Super%20Metroid/RAM%20map.asm).
+
+In this case we see that $0001 is part of "$00..50: Miscellaneous temporary variables" and $145B is part of "$0F78..1777: Enemy data". A bit mysterious maybe, but by playing the game on a TAS emulator with Memomy Watch, we can see that $0001 is equal to 9D and not really manipulable; not only that, we can determine that $145B is related to enemies that don't exist in this room, and thus its value is always 00. Therefore, this block is never gonna be a Gold Block.
+
+Just like so, we can go further on the list, considering pair by pair, checking the RAM Map to see what those addresses are and if we can change them with Samus (and also by doing some trial-and-error on TAS). If you try that, you will quickly see that there are big areas of the memory that don't work for us. Many values are set in stone (like door positions, number of enemies, Grapple-related variables, room map, last Message box, and so on). And because there aren't many 5D values naturally ocurring, generally we need BOTH addresses of the pair to be something that can be changed consistently, and it turns out to be pretty limited.
+
+Also, note that just creating a block in a good place on screen for $0380 is not enough. That block needs to be physically accessible (not blocked by a wall or ground, not surrounded by crash blockes, etc) and preferably have some open space around it to maneuver (but not so open, we still need to stand on top of other blocks to do movement like jump, morph, etc). 
+
+
+** The first 5Ds
+Through experimentation we noticed that there are two things in the room that generate some 5D values in memory.
+
+- One is to bomb the blocks near the Bomb Torizo entrance. When the blocks regenerate, they write 5D values in addresses $1D59, $1D5B, and a few others. While moving around, as long as we can avoid some other PLM-related blocks overwriting those 5D values, they do stay until we reach the Shuffler. If we use those for BTS, the equivalent BT values come from $11FD and $1201, which belong to "Enemy data". But in a good way! Turns out that both addresses can be turned into FF if enemy #10 is facing right. Enemy #10 is the Geemer on the bottom-most platform and it does not move offscreen, meaning that after Doorskip those values will be frozen at FF (or 7F, which also works for us). [video_5Dlr](https://youtu.be/6mGjmYP3pJs)
+  
+-  Another is to go near the skrees and let them all die on screen. Their projectiles write a bunch of 5Ds in addresses around $1A13, and they stay there. By checking the Shuffler list, using $1A13 as BTS, we see the BT comes from $0B71. This address is related to bombs and their positions. Near the Shuffler, laying two bombs does change its value to FC! They disappear quickly, but there is enough time to lay 2 bombs and touch the Shuffler. [video_5Dskree]( )
+  
+  
+With these 2 methods, we can generate not 2 but 3 Gold Blocks! We only need 1 for X-ray, but their positions matter, so having more options is good.
+We will call the 5D that comes from the skrees, 5D-skree; and the two 5Ds that come from the bombable blocks, 5D-left and 5D-right, since they are so close to each other.
+
+| Gold Block | BT address | BTS address |
+|------------+------------+-------------|
+| 5D-left    | $11FD      | $1D59       |
+| 5D-right   | $1201      | $1D5B       |
+| 5D-skree   | $0B71      | $1A13       |
+
+
+** That's it! Right?
+Upon inspection, 5D-skree isn't in a good position on screen to get items, but both 5D-left and 5D-right are able to be touched in a way that generates X-ray: when address $0380 has a value of 8944 or 8941. And there are good movement options to touch both blocks in that way, too! [video_5DlX](https://youtu.be/WcI_iayd4ng) [video_5DrX](https://youtu.be/DB5zWB8mlgo)
+
+... But... turns out that just getting the Message Box for X-ray isn't enough. Even though we get an X-ray icon on the HUD, we just can't select or use X-ray.
+
+The following code shows what happens when a Gold block 0F[5D] block is touched:
+
+#+BEGIN_EXAMPLE
+848536 jsr ($0000,x) [840380] A:0000 X:0380 Y:0026 S:1fd4 D:0000 DB:84 nvmxdizc V: 22 H: 592
+#+END_EXAMPLE
+
+Gold block (0F 5D) is executed. It will jump to contents of $0380, what just happens to be part of OAM (sprite ram) memory. This specific address can be manipulated by altering Samus's pose or position in screen. We found a great way to touch it just correctly, that a major item pickup subroutine is executed.
+
+
+#+BEGIN_EXAMPLE
+848944 ora $0000,y   [840026] A:0000 X:0380 Y:0026 S:1fd2 D:0000 DB:84 nvmxdizc V: 22 H: 648
+#+END_EXAMPLE
+
+Now here's the huge issue we had for a while. Each currently active PLM will decrease the value of Y register here by 2. This Y register determines how many major items are given, and getting X-Ray requires a value of #$8000 or greater. So in this scenario, if we currently have 20 plms active, the address where amount of items given comes from is $0026. This is the first "good" address we found, that was manipulable to be at least #$8000 for getting X-ray. Each additional PLM active reduces Y register's value by 2.
+
+
+#+BEGIN_EXAMPLE
+848947 sta $09a2     [8409a2] A:ffff X:0380 Y:0026 S:1fd2 D:0000 DB:84 Nvmxdizc V: 22 H: 688
+#+END_EXAMPLE
+
+Finally, the value of $0026 is written to currently equipped major items. This will give us every major item (not counting beams), since we can have value #$FFFF at $0026.
+
+
+So our job now turns to ALSO adding ways of creating PLMs with the Shuffler.
+
+
+** PLM Spawners
+What's a PLM anyway? Some blocks that have special actions other than just normal collision with Samus, for example: items; door shells; gates; blocks that interact with bombs/pbombs/screw; crumble blocks; and so on, have a PLM associated with them, a function that codes those different interactions. Taking Parlor as the example, it normally has 11 active PLMs. You can reduce it to 10 by opening the Red Door for example, but there is no normal way to increase the number of PLMs in this room. 
+
+We discovered at some point that certain blocks can spawn PLMs in the OOB. How? At least one by just luck and messingg around in Terminator OOB. Others through brute force: create every single block of a certain type OOB and interact with all of them :) . Some of these PLM spawners are better than others:
+
+*** Door Shells
+If Samus touches one of these blocks, they generate a PLM, ezpz. They are related to Door Shells.
+BT = 0F or 07, BTS = 14, 54, or 6F.
+*** Glitched Blocks
+Yes, god blocks or Gold Blocks do also spawn a PLM when touched, but they require normalized movement and peculiar positioning. They also have a tendency of bringing other unwanted effects, like teleports or shuffles. 
+BT = 0F or 07, BTS = 44 or 5D.
+*** Save Station?
+This one seemingly wants to spawn a Save Station around Samus, destroying blocks around her. It spawns a PLM, but also interacts with sound in a weird way, generating weird screeches and sound effects. Sometimes it makes the game crash during a door transition, making this block not reliable.
+BT = 0F or 07, BTS = 32.
+
+| PLM Spawner  | BT       | BTS            |
+|--------------+----------+----------------|
+| Door Shells  | 0F or 07 | 14 or 54 or 6F |
+| Glitched Blx | 0F or 07 | 44 or 5D       |
+| Save Station | 0F or 07 | 32             |
+
+
+*** Multi-touch
+An important effect that we observed is that touching these blocks in certain ways can yield more than 1 PLM. Touching them on the sides with certain heights or certain speeds can make a block generate +2 PLMs instead of just +1. Unmorphing approprietely under these blocks can spawn +1, +2, or sometimes even +3 PLMs! Best of all, if we can setup a PLM spawner exactly one tile above ground, we can just unmorph under it to spawn a staggering +4 PLMs!
+
+
+** Counting to 8 for a long time
+We have to go back to our trusted Shuffler list and RAM Map to figure out even more blocks to create, to increase the PLM number. Whatever PLM spawners we can create, we need to check their position and potential movement options, since, if possible, we want to multi-touch those PLM spawners. But first, let's consider what we already have: 
+
+*** Extra 5Ds (+2+1 or +2+2*)
+We have 3, but we only need 1 Gold block for X-ray, the others could be used to spawn PLMs. We were able to develop setups to get +2 PLMs from 5D-skree and +1 PLM from 5D-right  with consistent normalized movement and without breaking the game with extra effects. Regarding 5D-left, +2 PLMs is possible, but it uses $0380 around the value 6000, which goes to an openBUS part of bank 84, and might not be reliable* (we would like to avoid that if possible).
+
+*** Shuffler (+0 or +1)
+The Shuffler always adds 1 PLM when touched, but using the multi-touch trick we can get +1 from it. Although a perfect unmorph under it could make it generate +2 PLMs, doing so alters slightly how the Shuffler works, making 5D-right disappear, so it is not really worth going for +2.
+
+
+Now let's try to generate new blocks, new PLM spawners.
+
+
+*** 1st real PLM Spawner, 6F (+2 or +3)
+We noticed a static memory value of 6F at address $18E2, it is always there, so we can use it for BTS. The address that the Shuffler uses for BT is $090F. That address is "Layer 1 X subposition". In human terms, if Samus bonks into walls in certain ways, the initial value of 00 can be increased or decreased by 1. So we can bonk walls in the correct way to make it FF (or FE, FD, FC, etc). That block is generated in a convenient position where it is easy to get +2 PLMs from it. Getting +3 PLMs is techinically possible, but it is a tight timing.
+
+The reader might imagine that there is plenty of potential candidates in memory to generate more PLM spawners, but that has proved elusive. The reader can also see that it is possible to sum to +8 right there. It is true, but it has many negatives:
+
+- Shuffler(+1) and 6F(+3) are a bit hard;
+- It relies on a 5D-left touch that is potentially not consistent;
+- The touch on 5D-right to get X-ray leads to a vertical teleport that makes movement slow and dangerous, and sometimes it leads to an immediate crash.
+
+
+This is what we had accumulated up until a week ago or so. Along the years, progress has been erratic and in small bursts, but at this point we could kind of see the light at the end of the tunnel. If only we could find one little improvement... or one single extra useful block... the route could be done RTA maybe. Many things were tried at various points, such as using block extension types to "copy" other blocks; or generating a solid block under the 6F block with a 1-tile gap to unmorph under 6F; or using the 2nd Shuffler; or trying to use teleports to use 5D at other positions; and so on.  
+
+** ... Unraveling
+
+One of these days, while trying random stuff in the Shuffler OOB for the 314159265th time, to see if something different would happen, something did happen. A new method of multi-touch allowed for a +4 PLMs without the need to unmorph under the block. By falling while morphed and unmorphing frame-perfectly, we were able to improve that 6F (+2 or +3) to a 6F (+4)! And with that, the first RTA route was proposed, using the following blocks for PLMs: Shuffler (+1), 5D-skree (+2), 5D-right (+1), 6F-layer (+4). And of course, 5D-left to get X-ray.
+
+The route was working. We tested on emulator with save states, then on Snes. Also, that 6F(+4) had now a slightly modified setup to be a few-frame window instead of frame perfect. And now the work was to make sure the movements in the OOB pre-Shuffler and post-Shuffler were consistent. Sometimes some solid block that we used would turn into air, or the opposite, a solid block appeared where we would want to jump freely... so we would go back to the Shuffler list and RAM Map and make sure that this enemy was dead, or that we avoided this block OOB, or that we shot at this position, etc. 
+
+In that process of refinement for RTA, when the route was ready for runs, we realized we could generate another PLM spawner block... And when we tested it, it was positioned exactly one tile above another solid block, meaning we could just unmorph under it to generate an easy +4 PLMs! Not only that, it was pretty close to 5D-left and 5D-right, making movement faster and easier.
+
+*** 2nd PLM Spawner, 6F (+4)
+With precise movement, skree projectiles can generate values such as 6F, but further in memory compared to the 5D. One such address is at $1A8A. And where does the BT come from? It comes from $0C5F, which we thought would always be 00, if not for a random save state where it appeared to survive post-Shuffler with a value of FF. Rewatching that run, we saw that we can keep that address at FF by killing an enemy with one singular bomb and never using a bomb again. This forces us to choose either 5D-skree or this new 6F-skree. Given its privileged position, 6F-skree was a no-brainer.
+
+
+* Final route
+Just as the first route was done and being improved for a couple of days, next day a new route had to be implemented using the new found 6F-skree. But with the experience from the previous couple of days it didn't take long to adapt to the new block. The list below is ultimately all the blocks that are used to make the run work. 
+
+| Blocks   | BT address | gameplay relation | BTS address | gameplay relation | use for the block |
+|----------+------------+-------------------+-------------+-------------------+-------------------|
+| 5D-left  | $11FD      | enemy #10         | $1D59       | bombable blocks   | X-ray pickup      |
+| 5D-right | $1201      | enemy #10         | $1D5B       | bombable blocks   | +1 PLM            |
+| 6F-layer | $090F      | bonking walls     | $18E2       | -                 | +2 PLMs           |
+| 6F-skree | $0C5F      | bomb kill         | $1A8A       | skree projectile  | +4 PLMs           |
+| Shuffler | -          | -                 | -           | -                 | shuffle, +1 PLM   |
+
+
+Quick aside. Before we detail exactly how to obtain the PLM quantities and X-ray, movement OOB can be hard to see, even with a Hitbox viewer. So we'll try our best to also describe what we are doing. We propose some nomenclature to make that a bit easier:
+
+| Abrev. | Term                   | Steps                                                                                                           |
+|--------+------------------------+-----------------------------------------------------------------------------------------------------------------|
+| nsj    | normalized spin jump   | hold the Jump button to have it buffered. Now tap Back to do a full spin jump                                   |
+| nj     | normalized jump        | hold both R+L, then hold Forward. Now press and hold Jump to do a full jump (land holding R+L to stop in place) |
+| ncj    | normalized crouch jump | same as above, but you crouch after holding R+L (this results in a slightly less high jump)                     |
+| nbt    | normalized bomb turn   | lay a bomb, unmorph, then turn around                                                                           |
+| jt     | jump-turn              | jump then turn around mid-air                                                                                   |
+|        | angle-turn             | hold any Angle button (or both) then turn around. This allows for a turn while holding the Jump button          |
+
+
+And here's how we manipulate the RAM and how we interact with those blocks:
+
+** 6F-layer ($090F $18E2) (+2)
+$18E2 is always equal to 6F, so that's nice.
+
+$090F easily resets to 00, so it is best left for last in Parlor in-bounds. We want to decrease it by 01 at least once to get FF. The best way we found to do that is to spin jump against the right side of the platform near the Climb door, then bonk the wall on the right. [video_6F-layer](https://youtu.be/UrHqF4jTGo8)
+
+Notice that if Samus walks near the bottom door, the $090F value will be reset to 00. Samus has to moonwak left, from the right edge of the ground all the way to almost falling on the door to keep the value. Make sure to stand on the left-most pixels possible.
+
+Another issue is that bonking walls in the OOB (depending on the exact velocity), might increase the value in $090F by 1, bringing it back to 00. One options is to be careful with walls and minimize contact during OOB. Another option is to build some safety buffer by decreasing the value further down (to FC, for example). Just do more reps of platform -> wall before Doorskip to accomplish that.
+
+Getting +2 PLMs with this block is relatively easy once in position. You can do the normalized version in the video and just run left, or you can run left and aim-down before touching the block. Samus will get slightly stuck to the block, that's fine. [video_6F-layer(+2)](https://youtu.be/kbJ6mYYiFt4)
+
+
+** 6F-skree ($0C5F $1A8A) (+4)
+Normalized movement is done to generate a 6F value at $1A8A. Coming from the Save Station, climb the room and position Samus on top of the last platform before the top floor. It is important that there are no drops active in the room, if some was spawned, collect it before continuing. Now do:
+- non-running full spin jump against the ledge
+- jt nsj
+- jt nbt (we recommend another Up input to wait for the bomb while standing)
+- after the explosion, hold Run and Right until the 2nd skree's particles fully disappear
+
+$0C5F is set to FF by killing an enemy with 1 bomb on screen (technically, you can lay multiple bombs quickly, as long as the 1st is the one that hits the enemy). DO NOT lay another bomb (without killing an enemy) until the Shuffler is touched, otherwise this address will be reset to 00. [video_6F-skree](https://youtu.be/ZJMU8lFloV8) 
+
+We will mention again how amazing it is to get +4 PLMs from this block, very lucky. We just need to position Samus under it while morphed and then unmorph. Since we cannot see Samus while morphed, we need some feedback to tell if we positioned Samus correctly or not. So after unmorphing, we do a medium height jump. That is because if we did manage to roll under the block, after the unmorph Samus will be inside the block and able to jump above it, landing on top of it on the way back. If we did not roll under the block, after unmorphing and jumping, Samus will land on the ground and will be visibly lower on screen. [video_6F-skree(+4)](https://youtu.be/nk2EPV514as)
+ 
+
+** 5D-left ($11FD $1D59) and 5D-right ($1201 $1D5B)
+Bombing the blocks at near Bomb Torizo is easy enough and when the blocks reappear they will insert 5D values at $1D59 and $1D5B. Notice that Samus must be falling the Save shaft before the blocks respawn, otherwise the 5D values will be overwritten by some blocks that exist near this gap. 
+
+The Geemer on the last platform before Doorskip must be facing right when Samus goes OOB, to make $11FD and $1201 equal to FF. The last chance to make it move is during the jump to execute Doorskip. [video_5Dlr](https://youtu.be/6mGjmYP3pJs)
+
+Many crumble-like blocks must be avoided in the OOB, otherwise the 5D values will be overwritten and lost. Also, Snes has some unitialized RAM that seems to add extra crumble blocks near the Shuffler section (more about this in the next section).
+
+To get +1 PLM from 5D-right, after the shuffle, we should position Samus at X = FD5F.8000. A pause-unpause prevents a transition block from spawning under Samus. Crouch jump then hold Angle-down to touch the block at $0380 = 8966. [video_5Dr(+1)](https://youtu.be/B89pdmY6Dxg)
+
+5D-left will be used to get items. There is a consistent solid block above it. On that block, we press against the block on the left and turn right. Then, we run off the block, turn left, and perform a downback to touch this Gold block at $0380 = 8944. A horizontal teleport happens when the Message box disappears, which in this situation doesn't matter much, as we only need to find a door transition. [video_5Dl(X)](https://youtu.be/PkwrO2EGE2w)
+
+
+When it comes to refinement for RTA, through some trial-and-error, these addresses are important to keep in mind:
+
+*** enemies in general
+Enemies left alive will generate some solid blocks. Some of these blocks are useful, some don't matter, some are detrimental. A good rule of thumb is to be consistent. Geemers that move offscreen NEED to be killed, as they will keep moving after the Shuffler. After the shuffle, spike blocks are created and enemies just crash the game when they touch. (At some point we considered using one such Geemer to spawn a PLM, and it worked, but that strat was slow and quickly became obsoleted)  
+
+*** $0026 (shot related)
+This step is not a requirement, but there is no reason NOT to do it. The value in $0026 after Doorskip is C000, which is good enough to get X-ray. But, if you shoot (straight left or right, no angles) in the OOB, you can change this value either to 0000 (bad, no X-ray) or to FFFF (good, you get X-ray AND all major items, except beams). To get FFFF, you want to shoot when X is still positive (if X is negative, you get 0000). A good place to shoot is short after you perform Doorskip, wait 1 or 2 seconds and shoot forward.
+
+*** $03D7 (sprite related)
+This address and others nerby can accidentally be changed if a lot of sprites are generated on screen (think laying bombs, and shooting enemies, and drops lying around, and a door opening, etc). This can slightly alter the blocks you encounter right after getting X-ray, so they might get in the way of your setup to reach Landing Site. There is a workaround: these addresses are also used during a Pause screen IF you move the Map screen just once at least. Thus, during the Pause for Doorskip, just tap Up to move the Map a little bit and carry on as normal. This will give the same layout of blocks after X-ray pickup. 
+
+*** $1843 (timer)
+This is a timer that starts after reloading the save. When we touch the Shuffler, this value is generally 1_, and a slope block is generated (BT = 01). Some normalized movement options we developed rely on this slope, so we would not like it to be less than 10 or more than 1F. Luckily, playing Parlor like a human (slower than TAS) and not wasting a ton of time should be enough to land somewhere between 10 and 1F. But if somehow you are too fast or slow, test you setups for that. 
+
+
+** Movement OOB, pre-shuffle
+
+In principle there is nothing important about movement between Doorskip and the Shuffler, we don't need to manipulate anything here. But as we discussed above, it is easy to LOSE what we already built. So we will reinforce those pitfalls and how to avoid them:
+
+- Using bombs is forbidden until the Shuffler is touched.
+- Bonking certain walls with certain speeds/subspeeds, can undo the value in $090F. Either find movement that avoids going against walls or manipulate the value in $090F lower (do more manip reps), so it can tank some bonks.
+- Your last shot before X-ray should happen either right after Doorskip, or right before the last vertical drop (leading to the Shuffler section).
+- The hardest issue is avoiding crumble blocks overwriting the values in $1D59 and, specially, $1D5B. It is not straight forward how that happens. Some crumbles you have to touch 3 or more in quick succession to create problems; some only create problems if you move with horizontal speed but are ok with just vertical movement; some instantly override the memory if touched at all; some crumbles in this OOB section don't make crumbling sounds, so you don't even know you are interacting with them unless you test this area with a Hitbox viewer that shows all of them. And then Snes has more of these blocks it seems, probably near that vertical drop that leads to the Shuffler section.
+
+The reader is incentivized to try different movement options, but is advised to carefully check how all the important addresses respond to each strat. The following demonstration is one way we found to go through this area, on Emulator and Snes. [video_oob](https://youtu.be/OMPR-0jy6EI)
+
+*tip*: in OOB sections with limited visibility and limited sound effects, the blinking of an auto-cancel missile can be used as a timer.
+
+
+** Shuffler touch
+With our setups, we need +1 PLM from the Shuffler (not counting the +1 that it always gives anyway). There are a few methods to do that. We found two a bit more convenient, although none of these options guarantee a +1 touch, they are few-frames windows that require timing. After positioning Samus in the usual spot in preparation to touch the Shuffler, the two methods are:
+
+- Face right, crouch, and hold one of the angles. Now jump, let go of the angle, morph, and hold Right. With this jump, Samus does not gain enough height to touch the Shuffler while morphed. By unmorphing with good timing, Samus will touch the Shuffler and get +1 PLM. [video_sm](https://youtu.be/rwyhuDQt0s0)
+   
+  
+- Face left and do a small jump so you can hold Down+Jump. While still holding those buttons, hold Right to make Samus spin jump. With good timing, let go of Right and hold Left. This will make Samus break spin and turn left. [video_ss](https://youtu.be/9GpFI9Z8pAA)
+
+   
+Specially for this second method using spin jump, if inputs are done in a way that Samus fully aims down (2f or more between letting go of Right and pressing Left) and then frame perfectly turns around, a +2 PLMs can happen. This is not the end of the world for this route: it gives an additional +1 PLM but also makes 5D-right just a solid block, meaning we lose the ability to get +1 PLM from this 5D. So in the end it balances out to the same number of PLMs. (If this happens, you will jump under 5D-right and notice that it acts as a solid block. Just jump on it and continue the route as normal.)
+
+Btw, you can tell how many PLMs you got from the Shuffler. when you touch the Shuffler in the most basic way (+0), the game pauses for around 38 frames. If you touch it in a way that it gives +1 PLM, the freeze takes 76 frames instead. And in the rare situation that the Shuffler is touched to give +2 PLMs, the freeze time goes up to 112 frames. With some experience and a visual cue (such as a blinking missile), you can learn to differentiate these options.
+
+
+** Movement OOB, post-shuffle
+
+By this point in a run you can only hope that all the things are in place. The only action you CANNOT do is shoot, other than that we are more relaxed in a post-shuffle world.
+We focused on consistent, mostly normalized movement due to visual limitations, but of course time can be saved by being more daring and doing more usual, fast movement. 
+
+During the shuffle, it is recommended to keep holding either Right or Left to land on one of the blocks. The following setup starts after Samus is positioned on the left block, is pressed against the left "wall", and is buffering jump. 
+
+From there we do a njs, followed by turn around and ncj. Keep holding R+L and now also hold Left. After landing, turn to the right. This is the correct position for the 5D-right (+1) setup. The pause-unpause used in that setup is useful to see Samus against the background better, too. [video_5Dr(+1)](https://youtu.be/B89pdmY6Dxg)
+
+We use the background to jump to the solid block on the left and also to position Samus for the next step. Facing right, we do a nbt. Upon landing, we jt (hold Jump) and then do a nsj. After landing, we turn right and do a nj. We turn left and do a very short run into full spin jump (hold Jump). After landing, angle-turn then we do a nsj. This is the correct position for the 6F-layer (+2) setup. [video_i1](https://youtu.be/k-NA33PqCuI) [video_6F-layer(+2)](https://youtu.be/kbJ6mYYiFt4)
+
+After touching that block, Samus will be stuck to it. We do a full jump (hold the Jump button through all the steps in this paragraph), followed by a nsj. Then angle-turn, nsj, angle-turn, nsj, angle-turn, nsj (that's 3 reps). Angle-turn then nsj for the last time, but keep holding Right+Jump and also hold R+L (this way we can keep moving right after bonking some blocks and land in place). Samus is in position to do the 6F-skree (+4) setup. [video_i2](https://youtu.be/KLJL0B7pPLc) [video_6F-skree(+4)](https://youtu.be/nk2EPV514as)
+
+And, this is in position to do 5D-left X-ray! [video_5Dl(X)](https://youtu.be/PkwrO2EGE2w)
+
+After X-ray, we hold one of the angles. One possible setup to reach the transition to Landing Site is: morph then hold left (until the end). After hearing Samus bounce on the 2nd solid block, lay a bomb. Once the explosion sound goes away, unmorph. After a couple of seconds Samus is gonna land and press against the wall. The transition is in front of Samus, just morph and move left. [video_dt](https://youtu.be/ZpCHOjN04us)
+
+*tip*: in OOB sections with limited visibility and limited sound effects, a bomb explosion can be used as a timer.
+ 
+
+The whole post-shuffle section in one-go can be watched with inputs on screen here [video_shuffle](https://youtu.be/ag5Jr3Y04fc)
+
+
+** Landing Site
+This is very similar to other Any% Glitched routes: fall nearly 2 copies of the room to increase Samus's vertical position such that Y > 2400, then activate X-ray to corrupt memory address $D821, changing its value to some number between 40 and 80, or to some number between C0 and FF. After that, just find a door transition as close to the Ship as possible.
+The only difference to previous routes is that we have all major items to our disposal. Unfortunetely, we haven't found any new time saves with those extra items, although Spring Ball and maybe Screw Attack can make certain parts easier. What we found instead is a new way to trigger the Escape and hit a door transition! This new strat saves 4s (ironically, it doesn't need any of those extra major items). [video_escape](https://youtu.be/yOm9292UMVA)
+
+The full Landing Site OOB can be watched in the following video, where moonfalls were not performed simply to make the OOB easier to watch (in a run moonfalls save at least a handful of seconds) [video_site](https://youtu.be/F96LNNbZknw)
+
+
+Whew... finally, we are at the end of the route. Let's see how all of that looks in run.
+
+
+* Run in Action
+
+Let's watch the [RTA run sniq did](https://www.youtube.com/watch?v=lP2SUdKcTZk) and we will point out when things happen. Timestamps mentioned are in reference to the Liveplit timer on screen (not the youtube timer).
+
+The first part of the run is a standard RTA run from Ceres, to Morph, Missiles, and Bombs. Followed by a save at Parlor, reset and reload the file (to add the Shuffler in the OOB).
+
+Now starts the RAM manipulation for the blocks after Shuffler. Geemers that are killed will prevent some blocks from spawning and Geemers that are left alive will generate some solid blocks. We set on a configuration that works both for Parlor in bounds and for the post-shuffle OOB. We don't claim that this is the most optimal way, it is just one way.
+
+At 6:18 a drop is generated and it shoudn't be left on screen to preserve the manip that follows. At 6:20, normalized movement is done to generate a 6F value at $1A8A. Next, at 6:30, the four bombable blocks are destroyed leaving 5D values at $1D59 and $1D5B when they regenerate (the gap is crossed at 6:39 before that happens).
+
+At 6:43, that Geemer in particuar is chosen to die by 1 bomb, which sets $0C5F to FF. The set of jumps that follow manipulate the camera's subposition $090F to some value like FC. While this happens, notice that the Geemer under the platform makes its way to the top of the platform. At 6:52 Doorskip is done and we can see that Geemer moving right, which makes $11FD and $1201 equal to FF (or 7F, both work).
+
+We cannot see very well in the OOB, but we can hear the shots near the beginning to make $0026 equal to FF. Movement here is controlled as to not upset the memories related to the camera and to the bomb blocks. Of special importance is the run setup that happens at 7:12. The Shuffer position is reached at 7:24 and by the pause in the blinking missile, we know that the Shuffler was touched at 7:27 and gameplay resumes 1 second later.
+
+After the shuffle happens, normalized movement takes Samus to a correct position to touch the 1st Gold block at 7:39. A pause-unpause is done to prevent that block from spawning a transition block under Samus, then a crouch jump followed by angling-down makes the touch happen with $0380 = 8967. This increases the PLM count.
+
+The pause-unpause also makes it easier to see Samus against the background, that helps with movement on screen at 7:44. More normalized movement is done until Samus appears on screen at 7:57, where a PLM spawner block is touched a second later, adding more PLMs to the count.
+
+More normalized movement happens and Samus is on screen at 8:10, where the goal is to unmorph under a block to generate even more PLMs. A failed attempt at 8:12 before a successful one happens at 8:14 (we can tell by where Samus lands after a jump). And at 8:16, a quick positioning setup in preparation to perform a run, turn, downback. This way, Samus touches the 2nd Gold block with memory $0380 = 8944, which triggers a X-ray Message box. With the correct number of PLMs, Samus is gifted X-ray and all major items (with the exception of beams). That same touch on the Gold block also teleports Samus half-way across the room by the time the game resumes at 8:25, but we cannot actually see that, huh?
+
+The objective now being to just end the game asap, a convenient door transition to Landing Site OOB is found at 8:33. Movement is done OOB to reach an appropriate spot to use X-ray to glitch the memory that keeps track of Events in the game, that happens at 9:24, quickly followed by a transition to any room near the Ship. And...
+
+G_G !
+
+
+
+* That's it
+That was a lot of information. It is one of those things where when you get it, it is not that complicated, but putting into words makes it seem very complicated. There are also a lot of numbers to keep track of, that's real.
+
+Aspects of this have been worked on for many years, on and off. It was a little bit of a surprise to be able to develop an RTA run when we did, as progress has been sporadic. And just when the route was pretty much ready for runs, new things happened and another variation of the route had to be developed. A lot of time and effort went into this project, so we are excited to be able to finally accomplish a milestone with all the research and study that was done.
+
+This document was written with some haste, future updates will try to fix errors and inadequacies (links, for one).
+
+
+Thank you for reading.
+
+We both would like to thank PJboy. His RAM map, SM disassembly, and Hitbox viewer were invaluable for this project.
+
+sniq would like to thank amh
+
+amh would like to than sniq
+
+
+
+
