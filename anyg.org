@@ -6,7 +6,7 @@ So let's get into those new concepts.
 
 * Main techniques
 ** Shuffler Manipulation
-The Shuffler block that exists in Parlor OOB after a save -> reset -> reload is already known, it re-draws the room upon touching it, shuffling blocks around. We were able to better study the shuffle effect and we now know how the game uses information in memory to re-draw the room. Most importantly, some of that information comes from the RAM part of the memory, which is where the game keeps track of information such as where Samus is, her pose, her speed; or if enemies are alive, where they are, their speed; or what doors have been opened, camera position, etc. That is, the Shuffler partly uses information that we as players can change by playing the game and performing certain actions.
+The Shuffler block 0F[1C] that exists in Parlor OOB after a save -> reset -> reload is already known, it re-draws the room upon touching it, shuffling blocks around. We were able to better study the shuffle effect and we now know how the game uses information in memory to re-draw the room. Most importantly, some of that information comes from the RAM part of the memory, which is where the game keeps track of information such as where Samus is, her pose, her speed; or if enemies are alive, where they are, their speed; or what doors have been opened, camera position, etc. That is, the Shuffler partly uses information that we as players can change by playing the game and performing certain actions.
 This means that we can, in theory, generate whatever blocks we want after touching the Shuffler! 
 
 ** Gold Blocks
@@ -78,7 +78,7 @@ Upon inspection, 5D-skree isn't in a good position on screen to get items, but b
 
 ... But... turns out that just getting the Message Box for X-ray isn't enough. Even though we get an X-ray icon on the HUD, we just can't select or use X-ray.
 
-The following code shows what happens when a Gold block 0F[5D] block is touched:
+The following code shows what happens when a Gold block 0F[5D] is touched:
 
 #+BEGIN_EXAMPLE
 848536 jsr ($0000,x) [840380] A:0000 X:0380 Y:0026 S:1fd4 D:0000 DB:84 nvmxdizc V: 22 H: 592
@@ -331,6 +331,16 @@ G_G !
 
 
 
+* UPDATES 
+
+After the public release of the route, new findins and ideas that become part of the run will be added here, for now.
+
+** Use address $0028 instead of $0026 (21/05/26)
+
+The need for 20 active PLMs before the X-ray pick-up is now decreased by 1, to 19 active PLMs. This makes the Gold block use the value in $0028 (instead of $0026) to determine what items to give Samus. Normally that value is 00, but it's been found by sniq that shooting the ceiling immediately after Doorskip changes it to FF. Doing that, we can ditch one +1 PLM from the route. If we want to make the route easier, we can touch the Shuffler with a normal spin jump (+0 PLMs) and procede as discussed in previous sections. Optimizing for time instead, we can ignore 5D-right (+1) and then slightly alter the post-shuffle movement to compensate, which saves a handful of seconds. 
+
+
+
 * That's it
 That was a lot of information. It is one of those things where when you get it, it is not that complicated, but putting into words makes it seem very complicated. There are also a lot of numbers to keep track of, that's real.
 
@@ -345,7 +355,7 @@ We both would like to thank PJboy. His RAM map, SM disassembly, and Hitbox viewe
 
 sniq would like to thank amh
 
-amh would like to than sniq
+amh would like to thank sniq
 
 
 
