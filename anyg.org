@@ -296,7 +296,7 @@ The whole post-shuffle section in one-go can be watched with inputs on screen he
 
 
 ** Landing Site
-This is very similar to other Any% Glitched routes: fall nearly 2 copies of the room to increase Samus's vertical position such that Y > 2400, then activate X-ray to corrupt memory address $D821, changing its value to some number between 40 and 80, or to some number between C0 and FF. After that, just find a door transition as close to the Ship as possible.
+This is very similar to other Any% Glitched routes: fall nearly 2 copies of the room to increase Samus's vertical position such that Y > 2400, then activate X-ray to corrupt memory address $D820, changing its value to some number between 40-- and 80--, or to some number between C0-- and FF--. After that, just find a door transition as close to the Ship as possible.
 The only difference to previous routes is that we have all major items to our disposal. Unfortunetely, we haven't found any new time saves with those extra items, although Spring Ball and maybe Screw Attack can make certain parts easier. What we found instead is a new way to trigger the Escape and hit a door transition! This new strat saves 4s (ironically, it doesn't need any of those extra major items). [video_escape](https://youtu.be/yOm9292UMVA)
 
 The full Landing Site OOB can be watched in the following video, where moonfalls were not performed simply to make the OOB easier to watch (in a run moonfalls save at least a handful of seconds) [video_site](https://youtu.be/F96LNNbZknw)
