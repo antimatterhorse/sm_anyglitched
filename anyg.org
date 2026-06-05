@@ -200,7 +200,7 @@ $090F easily resets to 00, so it is best left for last in Parlor in-bounds. We w
 
 Notice that if Samus walks near the bottom door, the $090F value will be reset to 00. Samus has to moonwak left, from the right edge of the ground all the way to almost falling on the door to keep the value. Make sure to stand on the left-most pixels possible.
 
-Another issue is that bonking walls in the OOB (depending on the exact velocity), might increase the value in $090F by 1, bringing it back to 00. One options is to be careful with walls and minimize contact during OOB. Another option is to build some safety buffer by decreasing the value further down (to FC, for example). Just do more reps of platform -> wall before Doorskip to accomplish that.
+Another issue is that bonking walls in the OOB (depending on the exact velocity), might increase the value in $090F by 1, bringing it back to 00. One option is to be careful with walls and minimize contact during OOB. Another option is to build some safety buffer by decreasing the value further down (to FC, for example). Just do more reps of platform -> wall before Doorskip to accomplish that.
 
 Getting +2 PLMs with this block is relatively easy once in position. You can do the normalized version in the video and just run left, or you can run left and aim-down before touching the block. Samus will get slightly stuck to the block, that's fine. [video_6F-layer(+2)](https://youtu.be/kbJ6mYYiFt4)
 
@@ -279,7 +279,7 @@ We focused on consistent, mostly normalized movement due to visual limitations, 
 
 During the shuffle, it is recommended to keep holding either Right or Left to land on one of the blocks. The following setup starts after Samus is positioned on the left block, is pressed against the left "wall", and is buffering jump. 
 
-From there we do a njs, followed by turn around and ncj. Keep holding R+L and now also hold Left. After landing, turn to the right. This is the correct position for the 5D-right (+1) setup. The pause-unpause used in that setup is useful to see Samus against the background better, too. [video_5Dr(+1)](https://youtu.be/B89pdmY6Dxg)
+From there we do a nsj, followed by turn around and ncj. Keep holding R+L and now also hold Left. After landing, turn to the right. This is the correct position for the 5D-right (+1) setup. The pause-unpause used in that setup is useful to see Samus against the background better, too. [video_5Dr(+1)](https://youtu.be/B89pdmY6Dxg)
 
 We use the background to jump to the solid block on the left and also to position Samus for the next step. Facing right, we do a nbt. Upon landing, we jt (hold Jump) and then do a nsj. After landing, we turn right and do a nj. We turn left and do a very short run into full spin jump (hold Jump). After landing, angle-turn then we do a nsj. This is the correct position for the 6F-layer (+2) setup. [video_i1](https://youtu.be/k-NA33PqCuI) [video_6F-layer(+2)](https://youtu.be/kbJ6mYYiFt4)
 
