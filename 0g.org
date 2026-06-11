@@ -1,0 +1,27 @@
+This is a placeholder, Ill quicly explain the 0% route and add more details later.
+
+
+After getting X-ray in the same way as Any% glitched:
+
+* Intro and Escape flags
+We navigate down 2 copies of Landing Site as usual. A X-ray is used first to set $D914 = 0000, which set the Intro to be watched after reloading. A second X-ray is used a bit higher on screen to not interfere with $D914, and we set threee things with it:
+
+- Escape: yes (to finisht the game)
+- Ceres Ridley: alive (otherwise we get softlocked at Ceres)
+- All Doors: open (we don't have Power Bombs, and we need to open a pb door to reach a Save Station)
+
+https://youtu.be/oVRr094mMmI
+
+
+* Gold block
+
+After that, we fall 4 copies of the room, then move a bit left then down to reach the blocks that lead to Gauntlet (Ypos is >7000 here). We break the bottom block then use X-ray to set two of those bombable blocks' BTS to 5D. We touch one of those blocks at $0380 = 8950 to remove all Major items (they are still equipped and can still be used). The touch will trigger an item popup that is hard to see, then teleport Samus. 
+
+https://youtu.be/VcUh9MF1zE8
+
+
+* Tube
+
+We *have* to transition to the Tube. We need to reach a Save Station to save, but because Zebes is exploding, if we transition to Parlor or Crateria PB we get stuck (Gauntlet is very slow). We use X-ray again to change the BTS of some transition block to that of a Tube transition. All doors have been opened, so we can go to the nearest Save Station in Red Tower to save, reset, reload to get the Intro. After that the planet is exploding and it's gg.
+
+https://youtu.be/1bEL9Xx03U8
