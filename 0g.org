@@ -2,11 +2,11 @@
 
 * 0% Landing Site
 
-Firstly, we start the run in the same way as [Any% glitched](https://github.com/antimatterhorse/sm_anyglitched/blob/main/anyg.org)
+Firstly, we start the run in the same way as [[/anyg.org][Any% glitched]]
 
 After getting X-ray and entering Landing Site OOB, we set flags to watch the Intro and Escape and set a Gold block to remove items. Movement and setups are optimized for consistency and completion, there are many ways to improve RTA timing. There are other route possibilities too, such as going for another Doorskip->Shuffler after X-ray, or creating more Gold blocks in a single Shuffler visit. 
 
-As we explain the route below, please follow along [this video](https://youtu.be/1z3tL2sQDvc) 
+As we explain the route below, please follow along [[https://youtu.be/1z3tL2sQDvc][this video]]
 
 
 ** Seeting the Intro and Escape flags
@@ -19,9 +19,9 @@ A second X-ray is used a bit higher on screen, as to not interfere with $D914. W
 - All Doors: open (we don't have Power Bombs, and we need to open a pb door to reach a Save Station)
 
 
-[This picture](https://github.com/antimatterhorse/sm_anyglitched/blob/main/0g-mem.png) shows how the memory values look before the 2 X-rays, and how it looks after both X-rays. It is probably possible to accomplish these things with a single X-ray, that would save time.
+[[/0g-mem.png][This picture]] shows how the memory values look before the 2 X-rays, and how it looks after both X-rays. It is probably possible to accomplish these things with a single X-ray, that would save time.
 
-https://youtu.be/oVRr094mMmI
+[[https://youtu.be/oVRr094mMmI][demo1]]
 
 
 ** Gold block to remove Major items
@@ -33,7 +33,7 @@ We need to break the bottom block to have space to maneuver later, we use Screw 
 We go back up to those blocks, some of the solid blocks are now not-solid so we can go left and press against the "wall". We do 3 jump-turn-jump (careful not to do the last jump too high, else Samus might interact with the Gold block preemptively), then do a bomb-unmorph-turn to touch the Gold block when $0380 = 8950. That value will make a X-ray textbox appear (even if it is difficult to see because of the glitched graphics) that will make Samus collect 0 Major items, in other words, it will remove all Major items from Samus. Funilly enough, it doesn't interfere with "equipped items", only "collected items", so Samus can still use all the Major items she had previously equipped. (in the Pause menu, you can see that items aren't there anymore, so if you unequipped some items before, make sure to re-equip them before touching the Gold block). A vertical teleport will happen after the Item textbox disappears. 
  
 
-https://youtu.be/VcUh9MF1zE8
+[[https://youtu.be/VcUh9MF1zE8][demo2]]
 
 
 ** Tube exit
@@ -48,7 +48,7 @@ We run off the slope going right, do a running jump against the wall then Space 
 
 Once in the Tube, just head to the Red Tower Save station (the Wrecked Ship save was a bit slower in our tests), save-rest-reload to get the Intro.
 
-https://youtu.be/1bEL9Xx03U8
+[[https://youtu.be/1bEL9Xx03U8][demo3]]
 
 
 ** Ceres with items
